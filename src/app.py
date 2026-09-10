@@ -136,6 +136,15 @@ def _render_login():
     if method == "cookie":
         st.caption(t("login.cookie.help"))
         st.warning(t("login.cookie.danger"))
+        with st.expander(t("login.cookie.howto_header")):
+            st.markdown(t("login.cookie.howto_intro"))
+            st.markdown(t("login.cookie.howto_install"))
+            st.markdown(t("login.cookie.howto_export"))
+            st.markdown(t("login.cookie.howto_paste"))
+            st.markdown(t("login.cookie.howto_after"))
+            st.divider()
+            st.markdown(t("login.cookie.machine_header"))
+            st.markdown(t("login.cookie.machine_tips"))
         with st.form("cookie_login_form"):
             pasted = st.text_area(t("login.cookie.label"), height=100)
             submitted = st.form_submit_button(t("login.cookie.submit"))

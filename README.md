@@ -50,6 +50,39 @@ o Cookie-Editor, y pegás el resultado completo en Ghosted — no hace falta
 buscar ni editar nada adentro, la app encuentra sola el campo `sessionid`
 que necesita.
 
+### Cómo exportar la cookie (demo educativa)
+
+La app tiene esta misma guía, más detallada, en un panel desplegable justo
+donde se usa. La repetimos acá a propósito — el objetivo es que veas con tus
+propios ojos lo fácil que es copiar el acceso completo a una cuenta:
+
+1. **Instalar la extensión** (una vez): buscá "EditThisCookie v3" en la
+   Chrome Web Store e instalá la versión oficial del desarrollador
+   verificado — nunca una copia de un link suelto.
+2. **Exportar:** con `instagram.com` logueado en esa pestaña, abrí la
+   extensión y usá su botón de exportar — copia todas las cookies del sitio
+   al portapapeles.
+3. **Pegar:** volvé a Ghosted y pegá el resultado en el campo de cookie.
+   Listo — sin tocar tu contraseña ni un código.
+4. **Después de usarla:** borrá lo que copiaste del portapapeles y, si lo
+   exportaste a un archivo, eliminalo. No la guardes en texto plano en
+   ningún lado.
+
+Esa misma facilidad es el riesgo: cualquiera con acceso a tu sesión de
+Chrome (física o remota) puede hacer exactamente lo mismo. Por eso importa
+cómo protegés la máquina:
+
+- **Cifrá el disco** (FileVault/BitLocker) — sin esto, una máquina robada
+  apagada expone todo, cookies incluidas.
+- **Bloqueá la sesión** al alejarte, siempre.
+- **Solo instalá extensiones de fuentes verificadas** y revisá qué permisos
+  piden — una maliciosa puede exportar cookies en segundo plano, sin que
+  hagas ningún clic.
+- **Mantené el SO y el navegador actualizados** — la mayoría del malware
+  que roba cookies ("infostealers") explota vulnerabilidades ya parcheadas.
+- **Ojo con gestores de portapapeles que sincronizan a la nube.**
+- **Cerrá sesión de verdad**, no solo cierres la pestaña.
+
 ## Seguridad y privacidad
 
 - **Tu contraseña y tu cookie de sesión son, en la práctica, la misma cosa:
