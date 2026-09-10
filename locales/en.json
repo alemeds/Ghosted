@@ -3,6 +3,12 @@
   "app.subtitle": "Find out who doesn't follow you back on Instagram",
   "app.disclaimer": "Your credentials are used only for this session and are never written to disk. Using this tool may violate Instagram's Terms of Service; use it at your own discretion and in moderation.",
 
+  "about.header": "ℹ️ What is this and how do I use it?",
+  "about.purpose": "**Purpose:** Ghosted is an educational project. It exists to show, hands-on, how a real automation against an undocumented private API actually works (2FA quirks, device fingerprinting, rate-limiting) and how to handle sessions/credentials with reasonable security practices. It isn't meant as a product for mass or recurring use.",
+  "about.what_it_does": "**What it does:** compares who you follow on Instagram against who follows you back, and shows the difference — accounts you follow that don't follow you. From there you can filter them, export them, or unfollow the ones you pick, with pauses between actions so it doesn't look like a bot.",
+  "about.how_to_use": "**How to use it:**\n1. Log in (username/password, or session cookie — see below for why the cookie is the recommended option).\n2. Tap \"Scan followers\" and wait for it to finish.\n3. Review the results: search, filter, mark accounts to ignore (whitelist) or to unfollow.\n4. If you're unfollowing accounts, confirm and wait — the pauses are intentional, don't rush them.",
+  "about.credentials_warning": "**About your password and the session cookie:** both are, in practice, a full key to your Instagram account. Never share either, or paste them into sites you don't trust — not even educational tools like this one. If you use cookie login, delete it from wherever you exported it as soon as you're done, and consider logging out that session from Instagram's own security settings. This app only keeps them in memory during your browser session and never writes them to disk, but that doesn't protect you from pasting them in the wrong place yourself.",
+
   "login.header": "Log in",
   "login.username": "Instagram username",
   "login.password": "Password",
@@ -32,6 +38,7 @@
   "scan.scanning_followers": "Fetching your followers... ({count})",
   "scan.sleeping": "Pausing {seconds}s to avoid temporary Instagram blocks",
   "scan.done": "Scan complete: you follow {following} accounts, {non_followers} don't follow you back.",
+  "scan.partial": "Scan interrupted after checking {following} accounts you follow ({error}). Showing partial results - some non-followers may be missing.",
 
   "results.header": "Results",
   "results.tab.non_followers": "Not following back ({count})",
@@ -40,6 +47,7 @@
   "results.filter.private": "Show private accounts",
   "results.filter.verified": "Show verified accounts",
   "results.select_all": "Select all visible",
+  "results.select_one": "Select",
   "results.whitelist_add": "Add to whitelist",
   "results.whitelist_remove": "Remove from whitelist",
   "results.export_csv": "Export CSV",
@@ -56,6 +64,10 @@
   "unfollow.success": "Unfollowed @{username}",
   "unfollow.failed": "Could not unfollow @{username}: {error}",
   "unfollow.done": "Done: {success} succeeded, {failed} failed.",
+  "unfollow.log.download": "Download log (.txt)",
+  "unfollow.log.header": "Ghosted unfollow log - {date}",
+  "unfollow.log.ok": "unfollowed",
+  "unfollow.log.failed": "FAILED: {error}",
 
   "timings.header": "Timings (advanced)",
   "timings.between_scan_pages": "Pause between scan pages (ms)",

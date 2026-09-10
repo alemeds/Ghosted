@@ -67,13 +67,27 @@ def scan_non_followers(
     timings: Timings,
     on_progress: ProgressCallback,
 ) -> dict:
-    """Return {"following": [...], "non_followers": [...]}."""
-    user_id = str(client.user_id)
+    """Return {"following": [...], "non_followers": [...], "error": str | None}.
 
-    following = list(_paginate(client, user_id, "user_following_v1_chunk", timings, on_progress, "following"))
-    follower_ids = {
-        u["id"] for u in _paginate(client, user_id, "user_followers_v1_chunk", timings, on_progress, "followers")
-    }
+    Accumulates into local lists via explicit iteration (not `list(...)` on
+    the generator) so that a failure partway through - rate limit, network
+    blip - leaves whatever was already fetched in the result instead of
+    discarding it. "error" is set when the scan didn't finish; "non_followers"
+    in that case is a best-effort diff against however many followers were
+    seen before the failure, not necessarily final.
+    """
+    user_id = str(client.user_id)
+    following: list[dict] = []
+    follower_ids: set[str] = set()
+    error: str | None = None
+
+    try:
+        for user in _paginate(client, user_id, "user_following_v1_chunk", timings, on_progress, "following"):
+            following.append(user)
+        for user in _paginate(client, user_id, "user_followers_v1_chunk", timings, on_progress, "followers"):
+            follower_ids.add(user["id"])
+    except Exception as e:  # noqa: BLE001 - surfaced to the UI, not fatal to the app
+        error = str(e)
 
     non_followers = [u for u in following if u["id"] not in follower_ids]
-    return {"following": following, "non_followers": non_followers}
+    return {"following": following, "non_followers": non_followers, "error": error}

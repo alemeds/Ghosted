@@ -18,11 +18,13 @@ def _fake_user(pk, username):
 class FakeClient:
     """Mimics the two instagrapi chunk methods used by the scanner, paginating in fixed-size pages."""
 
-    def __init__(self, following_ids, follower_ids, user_id="me", page_size=2):
+    def __init__(self, following_ids, follower_ids, user_id="me", page_size=2, fail_followers_after_page=None):
         self.user_id = user_id
         self._following = [_fake_user(i, f"user{i}") for i in following_ids]
         self._followers = [_fake_user(i, f"user{i}") for i in follower_ids]
         self.page_size = page_size
+        self._fail_followers_after_page = fail_followers_after_page
+        self._followers_pages_served = 0
 
     def _chunk(self, pool, max_id):
         start = int(max_id) if max_id else 0
@@ -35,6 +37,9 @@ class FakeClient:
         return self._chunk(self._following, max_id)
 
     def user_followers_v1_chunk(self, user_id, max_amount=0, max_id=""):
+        if self._fail_followers_after_page is not None and self._followers_pages_served >= self._fail_followers_after_page:
+            raise RuntimeError("simulated rate limit")
+        self._followers_pages_served += 1
         return self._chunk(self._followers, max_id)
 
 
@@ -68,3 +73,22 @@ def test_should_report_progress_for_each_page():
     scan_non_followers(client, FAST_TIMINGS, lambda label, count: progress_calls.append((label, count)))
     assert ("following", 2) in progress_calls
     assert ("following", 4) in progress_calls
+
+
+def test_should_keep_partial_results_when_followers_phase_fails():
+    client = FakeClient(
+        following_ids=[1, 2, 3, 4],
+        follower_ids=[1, 2, 3, 4],
+        page_size=2,
+        fail_followers_after_page=0,
+    )
+    result = scan_non_followers(client, FAST_TIMINGS, lambda *_: None)
+    assert result["error"] == "simulated rate limit"
+    assert len(result["following"]) == 4  # completed before the failure
+    assert result["following"][0]["username"] == "user1"
+
+
+def test_should_have_no_error_on_a_clean_scan():
+    client = FakeClient(following_ids=[1, 2], follower_ids=[1])
+    result = scan_non_followers(client, FAST_TIMINGS, lambda *_: None)
+    assert result["error"] is None
