@@ -8,6 +8,8 @@ Login is a two-step flow because Instagram may require a 2FA code:
 1. `attempt_login(username, password)` -> may return "two_factor_required".
 2. `attempt_login(username, password, verification_code=code)` to finish.
 """
+import json
+import re
 from dataclasses import dataclass
 from typing import Any
 
@@ -120,5 +122,59 @@ def attempt_login(
         return LoginResult(status="bad_credentials")
     except PleaseWaitFewMinutes as e:
         return LoginResult(status="rate_limited", error=str(e))
+    except Exception as e:  # noqa: BLE001 - surface any other instagrapi/network failure to the UI
+        return LoginResult(status="error", error=str(e))
+
+
+def _extract_sessionid(pasted: str) -> str | None:
+    """Pull Instagram's `sessionid` cookie value out of whatever a user
+    pastes: a full cookie-export JSON (EditThisCookie, Cookie-Editor and
+    similar extensions all export a list of cookie objects with "name"/
+    "value" fields, or occasionally a single object), a raw
+    "sessionid=VALUE" cookie-header fragment, or just the bare value.
+    """
+    text = pasted.strip()
+    if not text:
+        return None
+
+    try:
+        data = json.loads(text)
+        items = data if isinstance(data, list) else [data]
+        for item in items:
+            if isinstance(item, dict) and item.get("name") == "sessionid" and item.get("value"):
+                return str(item["value"]).strip()
+    except (json.JSONDecodeError, TypeError):
+        pass
+
+    match = re.search(r"sessionid=([^;\s\"']+)", text)
+    if match:
+        return match.group(1).strip()
+
+    # Bare value: Instagram sessionids start with the numeric account id,
+    # then a (url-encoded or literal) colon.
+    if re.match(r"^\d+(%3A|:)", text):
+        return text
+
+    return None
+
+
+def attempt_login_with_cookie(pasted: str, client: Client | None = None) -> LoginResult:
+    """Log in by reusing an already-authenticated Instagram browser session
+    instead of username/password.
+
+    By the time this sessionid exists, the person already cleared 2FA in
+    their own browser - this sidesteps entirely the device-fingerprint and
+    legacy-2FA-endpoint problems `attempt_login` runs into (see its
+    docstring and `_request_sms_code`).
+    """
+    sessionid = _extract_sessionid(pasted)
+    if not sessionid:
+        return LoginResult(status="error", error="cookie_not_found")
+    client = client or new_client()
+    try:
+        client.login_by_sessionid(sessionid)
+        return LoginResult(status="success", client=client)
+    except AssertionError:
+        return LoginResult(status="error", error="cookie_invalid")
     except Exception as e:  # noqa: BLE001 - surface any other instagrapi/network failure to the UI
         return LoginResult(status="error", error=str(e))
