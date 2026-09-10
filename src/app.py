@@ -36,6 +36,8 @@ if "pending_password" not in st.session_state:
     st.session_state.pending_password = None
 if "pending_client" not in st.session_state:
     st.session_state.pending_client = None
+if "pending_2fa_notice" not in st.session_state:
+    st.session_state.pending_2fa_notice = None
 if "scan_result" not in st.session_state:
     st.session_state.scan_result = None
 if "whitelist" not in st.session_state:
@@ -63,12 +65,15 @@ def _clear_pending_login():
     st.session_state.pending_username = None
     st.session_state.pending_password = None
     st.session_state.pending_client = None
+    st.session_state.pending_2fa_notice = None
 
 
 def _render_login():
     st.subheader(t("login.header"))
 
     if st.session_state.awaiting_2fa:
+        if st.session_state.pending_2fa_notice == "legacy_unsupported":
+            st.warning(t("login.2fa.legacy_unsupported"))
         with st.form("two_factor_form"):
             code = st.text_input(t("login.2fa.code"))
             submitted = st.form_submit_button(t("login.2fa.submit"))
@@ -95,6 +100,7 @@ def _render_login():
             st.session_state.pending_username = username
             st.session_state.pending_password = password
             st.session_state.pending_client = result.client
+            st.session_state.pending_2fa_notice = result.error
             st.rerun()
         _handle_login_result(result, username)
 
