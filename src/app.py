@@ -34,6 +34,8 @@ if "pending_username" not in st.session_state:
     st.session_state.pending_username = None
 if "pending_password" not in st.session_state:
     st.session_state.pending_password = None
+if "pending_client" not in st.session_state:
+    st.session_state.pending_client = None
 if "scan_result" not in st.session_state:
     st.session_state.scan_result = None
 if "whitelist" not in st.session_state:
@@ -60,6 +62,7 @@ def _clear_pending_login():
     st.session_state.awaiting_2fa = False
     st.session_state.pending_username = None
     st.session_state.pending_password = None
+    st.session_state.pending_client = None
 
 
 def _render_login():
@@ -74,6 +77,7 @@ def _render_login():
                 st.session_state.pending_username,
                 st.session_state.pending_password,
                 verification_code=code,
+                client=st.session_state.pending_client,
             )
             _handle_login_result(result, st.session_state.pending_username)
         return
@@ -90,6 +94,7 @@ def _render_login():
             st.session_state.awaiting_2fa = True
             st.session_state.pending_username = username
             st.session_state.pending_password = password
+            st.session_state.pending_client = result.client
             st.rerun()
         _handle_login_result(result, username)
 
@@ -101,6 +106,11 @@ def _handle_login_result(result: auth.LoginResult, username: str):
         _clear_pending_login()
         st.rerun()
     elif result.status == "bad_credentials":
+        st.error(t("login.error.bad_credentials"))
+    elif result.status == "two_factor_required":
+        # Wrong/expired code: keep the SAME client so the user can retry
+        # without losing the device fingerprint tied to the challenge.
+        st.session_state.pending_client = result.client
         st.error(t("login.error.bad_credentials"))
     elif result.status == "challenge_required":
         st.error(t("login.error.challenge"))

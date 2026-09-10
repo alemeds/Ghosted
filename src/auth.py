@@ -30,13 +30,28 @@ def new_client() -> Client:
     return Client()
 
 
-def attempt_login(username: str, password: str, verification_code: str = "") -> LoginResult:
-    client = new_client()
+def attempt_login(
+    username: str,
+    password: str,
+    verification_code: str = "",
+    client: Client | None = None,
+) -> LoginResult:
+    """Attempt an Instagram login.
+
+    `client` MUST be the same instance returned from a prior
+    "two_factor_required" result when submitting the verification code.
+    A fresh Client() generates a new device fingerprint (uuid/phone_id/
+    device_id); Instagram does not associate that fingerprint with the
+    pending 2FA challenge, so the code is silently rejected or never
+    delivered again.
+    """
+    client = client or new_client()
     try:
         client.login(username, password, verification_code=verification_code)
         return LoginResult(status="success", client=client)
     except TwoFactorRequired:
-        return LoginResult(status="two_factor_required")
+        # Return the SAME client so the caller can reuse it in step 2.
+        return LoginResult(status="two_factor_required", client=client)
     except ChallengeRequired:
         return LoginResult(status="challenge_required")
     except BadPassword:
