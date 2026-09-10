@@ -10,6 +10,7 @@ import csv
 import io
 import json
 import sys
+from datetime import datetime
 from pathlib import Path
 
 import streamlit as st
@@ -48,16 +49,54 @@ if "selected_ids" not in st.session_state:
     st.session_state.selected_ids = set()
 if "unfollow_log" not in st.session_state:
     st.session_state.unfollow_log = []
+if "theme_override" not in st.session_state:
+    st.session_state.theme_override = "auto"
 
 with st.sidebar:
     lang = st.selectbox("🌐", SUPPORTED_LANGUAGES, index=SUPPORTED_LANGUAGES.index(st.session_state.lang), label_visibility="collapsed")
     st.session_state.lang = lang
+    theme_options = ["auto", "light", "dark"]
+    theme = st.radio(
+        "🎨",
+        theme_options,
+        index=theme_options.index(st.session_state.theme_override),
+        format_func=lambda o: {"auto": "🌓", "light": "☀️", "dark": "🌙"}[o],
+        horizontal=True,
+        label_visibility="collapsed",
+    )
+    st.session_state.theme_override = theme
 
 t = translator(st.session_state.lang)
+
+# Streamlit's runtime theme (st.context.theme) is read-only - there's no
+# official API to force a per-viewer theme, so "light"/"dark" here work by
+# overriding the CSS custom properties Streamlit's own components already
+# read from, rather than fighting each widget individually. "auto" injects
+# nothing and defers entirely to the viewer's system/Cloud-level theme.
+_THEME_CSS = {
+    "light": """
+        :root, .stApp { --background-color: #ffffff; --secondary-background-color: #f0f2f6; --text-color: #262730; }
+        .stApp { background-color: #ffffff; color: #262730; }
+        [data-testid="stSidebar"] { background-color: #f0f2f6; }
+    """,
+    "dark": """
+        :root, .stApp { --background-color: #0e1117; --secondary-background-color: #262730; --text-color: #fafafa; }
+        .stApp { background-color: #0e1117; color: #fafafa; }
+        [data-testid="stSidebar"] { background-color: #262730; }
+    """,
+}
+if st.session_state.theme_override in _THEME_CSS:
+    st.markdown(f"<style>{_THEME_CSS[st.session_state.theme_override]}</style>", unsafe_allow_html=True)
 
 st.title(f"👻 {t('app.title')}")
 st.caption(t("app.subtitle"))
 st.info(t("app.disclaimer"), icon="⚠️")
+
+with st.expander(t("about.header")):
+    st.markdown(t("about.purpose"))
+    st.markdown(t("about.what_it_does"))
+    st.markdown(t("about.how_to_use"))
+    st.warning(t("about.credentials_warning"), icon="🔑")
 
 
 def _clear_pending_login():
@@ -185,20 +224,40 @@ def _render_timings_settings():
 def _run_scan():
     status = st.empty()
     progress = st.progress(0)
+    client = st.session_state.client
+
+    # Best-effort totals so the bar reflects real progress instead of sitting
+    # at 0% until the very end - following is weighted as the first half,
+    # followers as the second. If this call fails for any reason the scan
+    # still runs, just without a moving bar.
+    total_following = total_followers = None
+    try:
+        account = client.user_info(str(client.user_id))
+        total_following = account.following_count or None
+        total_followers = account.follower_count or None
+    except Exception:  # noqa: BLE001 - progress-bar accuracy only, never fatal
+        pass
 
     def on_progress(label: str, count: int):
         if label == "following":
             status.text(t("scan.scanning_following", count=count))
+            if total_following:
+                progress.progress(min(int(count / total_following * 50), 50))
         elif label == "followers":
             status.text(t("scan.scanning_followers", count=count))
+            if total_followers:
+                progress.progress(50 + min(int(count / total_followers * 50), 50))
         elif label == "long_pause":
             status.text(t("scan.sleeping", seconds=count))
 
-    result = scanner.scan_non_followers(st.session_state.client, st.session_state.timings, on_progress)
+    result = scanner.scan_non_followers(client, st.session_state.timings, on_progress)
     progress.progress(100)
     st.session_state.scan_result = result
     st.session_state.selected_ids = set()
-    st.success(t("scan.done", following=len(result["following"]), non_followers=len(result["non_followers"])))
+    if result.get("error"):
+        st.warning(t("scan.partial", following=len(result["following"]), error=result["error"]))
+    else:
+        st.success(t("scan.done", following=len(result["following"]), non_followers=len(result["non_followers"])))
 
 
 def _export_bytes(users: list[dict], fmt: str) -> bytes:
@@ -242,20 +301,28 @@ def _render_results():
     if select_all:
         st.session_state.selected_ids |= {u["id"] for u in filtered}
 
-    for user in filtered:
-        cols = st.columns([0.5, 3, 1])
-        checked = user["id"] in st.session_state.selected_ids
-        new_checked = cols[0].checkbox("", value=checked, key=f"select_{user['id']}")
-        if new_checked:
-            st.session_state.selected_ids.add(user["id"])
-        else:
-            st.session_state.selected_ids.discard(user["id"])
-        badge = " 🔒" if user["is_private"] else ""
-        badge += " ✔️" if user["is_verified"] else ""
-        cols[1].write(f"**@{user['username']}**{badge}  \n{user['full_name']}")
-        if cols[2].button(t("results.whitelist_add"), key=f"wl_{user['id']}"):
-            whitelist.add(st.session_state, [user])
-            st.rerun()
+    cards_per_row = 4
+    for row_start in range(0, len(filtered), cards_per_row):
+        row_cols = st.columns(cards_per_row)
+        for col, user in zip(row_cols, filtered[row_start:row_start + cards_per_row]):
+            with col.container(border=True):
+                if user["profile_pic_url"]:
+                    st.image(user["profile_pic_url"], width=80)
+                else:
+                    st.markdown("### 👤")
+                badge = " 🔒" if user["is_private"] else ""
+                badge += " ✔️" if user["is_verified"] else ""
+                st.markdown(f"**@{user['username']}**{badge}")
+                st.caption(user["full_name"])
+                checked = user["id"] in st.session_state.selected_ids
+                new_checked = st.checkbox(t("results.select_one"), value=checked, key=f"select_{user['id']}")
+                if new_checked:
+                    st.session_state.selected_ids.add(user["id"])
+                else:
+                    st.session_state.selected_ids.discard(user["id"])
+                if st.button(t("results.whitelist_add"), key=f"wl_{user['id']}", use_container_width=True):
+                    whitelist.add(st.session_state, [user])
+                    st.rerun()
 
     col_csv, col_json = st.columns(2)
     col_csv.download_button(t("results.export_csv"), _export_bytes(filtered, "csv"), file_name="ghosted_non_followers.csv")
@@ -290,6 +357,13 @@ def _render_unfollow_section(non_followers: list[dict]):
             st.session_state.unfollow_confirm_pending = False
             st.rerun()
 
+    if st.session_state.unfollow_log:
+        st.download_button(
+            t("unfollow.log.download"),
+            _unfollow_log_txt(st.session_state.unfollow_log),
+            file_name="ghosted_unfollow_log.txt",
+        )
+
 
 def _run_unfollow(users: list[dict]):
     status = st.empty()
@@ -301,7 +375,12 @@ def _run_unfollow(users: list[dict]):
             status.text(t("unfollow.progress", username=user["username"], current=index, total=total))
         else:
             st.warning(t("unfollow.failed", username=user["username"], error=error or ""))
-        st.session_state.unfollow_log.append({"user": user, "success": success, "error": error})
+        st.session_state.unfollow_log.append({
+            "user": user,
+            "success": success,
+            "error": error,
+            "at": datetime.now().isoformat(timespec="seconds"),
+        })
 
     def on_long_pause(minutes):
         status.text(t("unfollow.sleeping", minutes=minutes, batch=st.session_state.timings.unfollow_long_pause_every))
@@ -313,6 +392,14 @@ def _run_unfollow(users: list[dict]):
     successes = sum(1 for e in st.session_state.unfollow_log if e["success"])
     failures = len(st.session_state.unfollow_log) - successes
     st.success(t("unfollow.done", success=successes, failed=failures))
+
+
+def _unfollow_log_txt(log: list[dict]) -> bytes:
+    lines = [t("unfollow.log.header", date=datetime.now().isoformat(timespec="seconds"))]
+    for entry in log:
+        status = t("unfollow.log.ok") if entry["success"] else t("unfollow.log.failed", error=entry["error"] or "")
+        lines.append(f"{entry['at']}  @{entry['user']['username']}  {status}")
+    return "\n".join(lines).encode("utf-8")
 
 
 def _render_whitelist_manager():

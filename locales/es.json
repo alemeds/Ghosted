@@ -3,6 +3,12 @@
   "app.subtitle": "Descubrí quién no te sigue de vuelta en Instagram",
   "app.disclaimer": "Tus credenciales se usan solo para esta sesión y nunca se guardan en disco. El uso de esta herramienta puede infringir los Términos de Servicio de Instagram; usala bajo tu propio criterio y con moderación.",
 
+  "about.header": "ℹ️ ¿Qué es esto y cómo se usa?",
+  "about.purpose": "**Propósito:** Ghosted es un proyecto educativo. Existe para mostrar, de forma práctica, cómo funciona una automatización real contra una API privada no documentada (con sus problemas de 2FA, fingerprint de dispositivo, rate-limiting) y cómo manejar sesiones/credenciales con criterios de seguridad razonables. No está pensado como un producto para uso masivo ni recurrente.",
+  "about.what_it_does": "**Qué hace:** compara a quién seguís en Instagram contra quién te sigue a vos, y te muestra la diferencia — cuentas que seguís pero no te siguen de vuelta. Desde ahí podés filtrarlas, exportarlas, o dejar de seguir las que elijas, con pausas entre acciones para no parecer un bot.",
+  "about.how_to_use": "**Cómo usar:**\n1. Iniciá sesión (usuario/contraseña, o cookie de sesión — ver abajo por qué la cookie es la opción recomendada).\n2. Tocá \"Escanear seguidores\" y esperá a que termine.\n3. Revisá el resultado: buscá, filtrá, marcá cuentas a ignorar (lista blanca) o a dejar de seguir.\n4. Si vas a dejar de seguir cuentas, confirmá y esperá — hay pausas a propósito, no lo apures.",
+  "about.credentials_warning": "**Sobre tu contraseña y la cookie de sesión:** ambas son, en la práctica, una llave completa a tu cuenta de Instagram. Nunca las compartas, ni las pegues en sitios en los que no confíes — ni siquiera en herramientas educativas como esta. Si usás el login por cookie, borrala de donde la exportaste apenas termines, y considerá cerrar esa sesión desde la configuración de seguridad de Instagram. Esta app las usa solo en memoria durante tu sesión de navegador y nunca las guarda en disco, pero eso no te protege de vos mismo pegándolas en el lugar equivocado.",
+
   "login.header": "Iniciar sesión",
   "login.username": "Usuario de Instagram",
   "login.password": "Contraseña",
@@ -32,6 +38,7 @@
   "scan.scanning_followers": "Obteniendo tus seguidores... ({count})",
   "scan.sleeping": "Pausa de {seconds}s para evitar bloqueos temporales de Instagram",
   "scan.done": "Escaneo completado: seguís a {following} cuentas, {non_followers} no te siguen de vuelta.",
+  "scan.partial": "Escaneo interrumpido después de revisar {following} cuentas que seguís ({error}). Mostrando resultados parciales - pueden faltar algunos que no te siguen.",
 
   "results.header": "Resultados",
   "results.tab.non_followers": "No te siguen ({count})",
@@ -40,6 +47,7 @@
   "results.filter.private": "Mostrar cuentas privadas",
   "results.filter.verified": "Mostrar cuentas verificadas",
   "results.select_all": "Seleccionar todo lo visible",
+  "results.select_one": "Seleccionar",
   "results.whitelist_add": "Agregar a lista blanca",
   "results.whitelist_remove": "Quitar de lista blanca",
   "results.export_csv": "Exportar CSV",
@@ -56,6 +64,10 @@
   "unfollow.success": "Dejaste de seguir a @{username}",
   "unfollow.failed": "No se pudo dejar de seguir a @{username}: {error}",
   "unfollow.done": "Listo: {success} exitosos, {failed} fallidos.",
+  "unfollow.log.download": "Descargar log (.txt)",
+  "unfollow.log.header": "Log de unfollows de Ghosted - {date}",
+  "unfollow.log.ok": "dejado de seguir",
+  "unfollow.log.failed": "FALLÓ: {error}",
 
   "timings.header": "Tiempos (avanzado)",
   "timings.between_scan_pages": "Pausa entre páginas de escaneo (ms)",
