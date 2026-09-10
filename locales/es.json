@@ -10,6 +10,7 @@
   "login.2fa.header": "Verificación en dos pasos",
   "login.2fa.code": "Código de verificación",
   "login.2fa.submit": "Confirmar código",
+  "login.2fa.legacy_unsupported": "Instagram puso esta cuenta en un flujo de verificación anterior que esta app no puede dirigir automáticamente a SMS o WhatsApp. Si tenés una app autenticadora o un código de respaldo para esta cuenta, ingresalo arriba.",
   "login.error.bad_credentials": "Usuario o contraseña incorrectos.",
   "login.error.challenge": "Instagram pidió una verificación adicional (checkpoint de seguridad). Iniciá sesión desde la app oficial o el sitio web para resolverlo, y volvé a intentar acá.",
   "login.error.generic": "No se pudo iniciar sesión: {error}",
