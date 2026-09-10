@@ -6,14 +6,22 @@ from src import auth
 class FakeClient:
     """Mimics only the instagrapi.Client surface attempt_login() touches."""
 
-    def __init__(self, last_json=None, raise_on_login=None):
+    def __init__(self, last_json=None, raise_on_login=None, raise_on_sessionid=None):
         self.last_json = last_json or {}
         self._raise_on_login = raise_on_login
+        self._raise_on_sessionid = raise_on_sessionid
         self.bloks_calls = []
+        self.sessionid_used = None
 
     def login(self, username, password, verification_code=""):
         if self._raise_on_login is not None:
             raise self._raise_on_login
+        return True
+
+    def login_by_sessionid(self, sessionid):
+        if self._raise_on_sessionid is not None:
+            raise self._raise_on_sessionid
+        self.sessionid_used = sessionid
         return True
 
     def bloks_two_step_verification_entrypoint(self, context):
@@ -81,3 +89,48 @@ def test_find_two_step_context_should_locate_nested_value():
 
 def test_find_two_step_context_should_return_none_when_absent():
     assert auth._find_two_step_context({"a": {"b": 1}}) is None
+
+
+def test_extract_sessionid_should_read_value_from_cookie_export_list():
+    export = '[{"name": "csrftoken", "value": "abc"}, {"name": "sessionid", "value": "123:XYZ:1"}]'
+    assert auth._extract_sessionid(export) == "123:XYZ:1"
+
+
+def test_extract_sessionid_should_read_value_from_single_cookie_object():
+    export = '{"name": "sessionid", "value": "123:XYZ:1"}'
+    assert auth._extract_sessionid(export) == "123:XYZ:1"
+
+
+def test_extract_sessionid_should_read_cookie_header_fragment():
+    assert auth._extract_sessionid("csrftoken=abc; sessionid=123:XYZ:1; ds_user_id=123") == "123:XYZ:1"
+
+
+def test_extract_sessionid_should_accept_bare_value():
+    assert auth._extract_sessionid("  123%3AXYZ%3A1  ") == "123%3AXYZ%3A1"
+
+
+def test_extract_sessionid_should_return_none_when_not_found():
+    assert auth._extract_sessionid('[{"name": "csrftoken", "value": "abc"}]') is None
+    assert auth._extract_sessionid("not a cookie at all") is None
+    assert auth._extract_sessionid("") is None
+
+
+def test_should_log_in_with_cookie_when_sessionid_found():
+    client = FakeClient()
+    result = auth.attempt_login_with_cookie('[{"name": "sessionid", "value": "123:XYZ:1"}]', client=client)
+    assert result.status == "success"
+    assert client.sessionid_used == "123:XYZ:1"
+
+
+def test_should_fail_with_cookie_not_found_when_no_sessionid_in_pasted_text():
+    client = FakeClient()
+    result = auth.attempt_login_with_cookie('[{"name": "csrftoken", "value": "abc"}]', client=client)
+    assert result.status == "error"
+    assert result.error == "cookie_not_found"
+
+
+def test_should_fail_with_cookie_invalid_when_sessionid_malformed():
+    client = FakeClient(raise_on_sessionid=AssertionError("Invalid sessionid"))
+    result = auth.attempt_login_with_cookie("123:XYZ:1", client=client)
+    assert result.status == "error"
+    assert result.error == "cookie_invalid"

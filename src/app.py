@@ -87,6 +87,26 @@ def _render_login():
             _handle_login_result(result, st.session_state.pending_username)
         return
 
+    method = st.radio(
+        t("login.method.label"),
+        ["password", "cookie"],
+        format_func=lambda m: t(f"login.method.{m}"),
+        horizontal=True,
+    )
+
+    if method == "cookie":
+        st.caption(t("login.cookie.help"))
+        st.warning(t("login.cookie.danger"))
+        with st.form("cookie_login_form"):
+            pasted = st.text_area(t("login.cookie.label"), height=100)
+            submitted = st.form_submit_button(t("login.cookie.submit"))
+        if submitted:
+            if not pasted.strip():
+                return
+            result = auth.attempt_login_with_cookie(pasted)
+            _handle_login_result(result, result.client.username if result.client else "")
+        return
+
     with st.form("login_form"):
         username = st.text_input(t("login.username"))
         password = st.text_input(t("login.password"), type="password")
@@ -124,6 +144,10 @@ def _handle_login_result(result: auth.LoginResult, username: str):
     elif result.status == "rate_limited":
         st.error(t("login.error.generic", error=result.error or ""))
         _clear_pending_login()
+    elif result.error == "cookie_not_found":
+        st.error(t("login.cookie.error.not_found"))
+    elif result.error == "cookie_invalid":
+        st.error(t("login.cookie.error.invalid"))
     else:
         st.error(t("login.error.generic", error=result.error or result.status))
         _clear_pending_login()

@@ -5,3 +5,4 @@ venv/
 .env
 .DS_Store
 *.session
+scripts/diagnose_2fa.py
