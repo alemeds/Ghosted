@@ -2,29 +2,17 @@
   "app.title": "Ghosted",
   "app.subtitle": "Find out who doesn't follow you back on Instagram",
   "app.disclaimer": "Your credentials are used only for this session and are never written to disk. Using this tool may violate Instagram's Terms of Service; use it at your own discretion and in moderation.",
-
   "about.header": "ℹ️ What is this and how do I use it?",
   "about.purpose": "**Purpose:** Ghosted is an educational project. It exists to show, hands-on, how a real automation against an undocumented private API actually works (2FA quirks, device fingerprinting, rate-limiting) and how to handle sessions/credentials with reasonable security practices. It isn't meant as a product for mass or recurring use.",
   "about.what_it_does": "**What it does:** compares who you follow on Instagram against who follows you back, and shows the difference — accounts you follow that don't follow you. From there you can filter them, export them, or unfollow the ones you pick, with pauses between actions so it doesn't look like a bot.",
-  "about.how_to_use": "**How to use it:**\n1. Log in (username/password, or session cookie — see below for why the cookie is the recommended option).\n2. Tap \"Scan followers\" and wait for it to finish.\n3. Review the results: search, filter, mark accounts to ignore (whitelist) or to unfollow.\n4. If you're unfollowing accounts, confirm and wait — the pauses are intentional, don't rush them.",
+  "about.how_to_use": "**How to use it:**\n1. Log in by pasting a session cookie (see below for how to export one).\n2. Tap \"Scan followers\" and wait for it to finish.\n3. Review the results: search, filter, mark accounts to ignore (whitelist) or to unfollow.\n4. If you're unfollowing accounts, confirm and wait — the pauses are intentional, don't rush them.",
   "about.credentials_warning": "**About your password and the session cookie:** both are, in practice, a full key to your Instagram account. Never share either, or paste them into sites you don't trust — not even educational tools like this one. If you use cookie login, delete it from wherever you exported it as soon as you're done, and consider logging out that session from Instagram's own security settings. This app only keeps them in memory during your browser session and never writes them to disk, but that doesn't protect you from pasting them in the wrong place yourself.",
-
   "login.header": "Log in",
-  "login.username": "Instagram username",
-  "login.password": "Password",
-  "login.submit": "Log in",
-  "login.2fa.header": "Two-factor verification",
-  "login.2fa.code": "Verification code",
-  "login.2fa.submit": "Confirm code",
-  "login.2fa.legacy_unsupported": "Instagram put this account on an older verification flow that this app can't direct to SMS or WhatsApp automatically. If you have an authenticator app or a backup code for this account, enter it above.",
-  "login.method.label": "Login method",
-  "login.method.password": "Username and password",
-  "login.method.cookie": "Session cookie (recommended)",
   "login.cookie.help": "Skips 2FA entirely by reusing a session your browser already has. Log into instagram.com normally, then use a cookie-export extension (e.g. EditThisCookie, Cookie-Editor) on that tab to export the cookies for instagram.com, and paste the result below - you don't need to find or edit anything inside it, the app looks for the piece it needs on its own.",
   "login.cookie.danger": "⚠️ That exported value is a live key to your account, equivalent to your password — anyone who has it can act as you on Instagram without ever entering a code. Never paste it anywhere you don't fully trust, and once you're done with this tool, delete it from wherever you exported it to (and consider logging out that browser session from Instagram's own security settings, which invalidates it).",
   "login.cookie.howto_header": "📋 How to export the cookie with EditThisCookie (step by step)",
   "login.cookie.howto_intro": "We're spelling this out on purpose: we want you to see with your own eyes how easy it is to copy full access to an account when someone has three minutes and the right cookie. It's exactly the same ease - and the same risk - as any other account of yours (bank, email, social media) if you leave a session open on a machine you don't control.",
-  "login.cookie.howto_install": "**1. Install the extension** (one time only): go to the Chrome Web Store, search \"EditThisCookie v3\" (or \"Cookie-Editor\", works the same way) and install it. Any extension like this asks for permission to read the cookies of sites you visit - that's literally what you're about to use in your favor, so only install the official version from a verified developer, never a copy from a random link.",
+  "login.cookie.howto_install": "**1. Install the extension** (one time only): install [EditThisCookie v3](https://chromewebstore.google.com/detail/editthiscookie-v3/ojfebgpkimhlhcblbalbfjblapadhbol) from the Chrome Web Store (\"Cookie-Editor\" works the same way too, if you prefer that one). Any extension like this asks for permission to read the cookies of sites you visit - that's literally what you're about to use in your favor, so only install the official version from a verified developer, never a copy from a random link.",
   "login.cookie.howto_export": "**2. Export the cookie:** log into instagram.com normally in that same tab. With the Instagram tab active, click the extension's icon → export button (an export/outward-arrow icon, usually says \"Export\" or copy as JSON) → this automatically copies all of the site's cookies to your clipboard.",
   "login.cookie.howto_paste": "**3. Paste it here:** come back to this Ghosted tab and paste (Ctrl/Cmd+V) into the field above. That's it - in under a minute, without ever touching your password or a code, anyone with physical or remote access to your Chrome session could have done exactly the same thing.",
   "login.cookie.howto_after": "**4. After using it:** clear what you copied from your clipboard (paste it once somewhere harmless, like the address bar, then delete it - so it isn't sitting there for the next accidental Ctrl+V). If you exported it to a file, delete that file. Don't save it in notes, a chat, or anywhere else in plain text.",
@@ -34,12 +22,9 @@
   "login.cookie.submit": "Log in with cookie",
   "login.cookie.error.not_found": "Couldn't find a \"sessionid\" cookie in what you pasted. Make sure you exported the cookies for instagram.com while logged in.",
   "login.cookie.error.invalid": "That session looks invalid or expired. Export the cookies again from a fresh instagram.com tab.",
-  "login.error.bad_credentials": "Incorrect username or password.",
-  "login.error.challenge": "Instagram requested extra verification (security checkpoint). Log in from the official app or website to clear it, then try again here.",
   "login.error.generic": "Login failed: {error}",
   "login.success": "Logged in as @{username}",
   "login.logout": "Log out",
-
   "scan.header": "Scan",
   "scan.start": "Scan followers",
   "scan.scanning_following": "Fetching accounts you follow... ({count})",
@@ -47,7 +32,6 @@
   "scan.sleeping": "Pausing {seconds}s to avoid temporary Instagram blocks",
   "scan.done": "Scan complete: you follow {following} accounts, {non_followers} don't follow you back.",
   "scan.partial": "Scan interrupted after checking {following} accounts you follow ({error}). Showing partial results - some non-followers may be missing.",
-
   "results.header": "Results",
   "results.tab.non_followers": "Not following back ({count})",
   "results.tab.whitelisted": "Whitelist ({count})",
@@ -61,7 +45,6 @@
   "results.export_csv": "Export CSV",
   "results.export_json": "Export JSON",
   "results.empty": "Nothing to show.",
-
   "unfollow.header": "Unfollow",
   "unfollow.selected": "{count} accounts selected",
   "unfollow.start": "Unfollow selected",
@@ -76,7 +59,6 @@
   "unfollow.log.header": "Ghosted unfollow log - {date}",
   "unfollow.log.ok": "unfollowed",
   "unfollow.log.failed": "FAILED: {error}",
-
   "timings.header": "Timings (advanced)",
   "timings.between_scan_pages": "Pause between scan pages (ms)",
   "timings.scan_long_pause_every": "Long pause every N pages",
@@ -85,7 +67,6 @@
   "timings.unfollow_long_pause_every": "Long pause every N unfollows",
   "timings.unfollow_long_pause_minutes": "Long pause duration (min)",
   "timings.reset": "Reset to defaults",
-
   "whitelist.header": "Whitelist",
   "whitelist.export": "Export whitelist",
   "whitelist.import": "Import whitelist",
@@ -93,8 +74,6 @@
   "whitelist.import.error": "Invalid file: {error}",
   "whitelist.clear": "Clear whitelist",
   "whitelist.clear.confirm": "Clear the entire whitelist? This cannot be undone.",
-
   "language.label": "Language",
-
   "notice.footer": "Ghosted is inspired by [InstagramUnfollowers](https://github.com/davidarroyo1234/InstagramUnfollowers) by David Arroyo (MIT License)."
 }

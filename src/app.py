@@ -29,16 +29,6 @@ if "client" not in st.session_state:
     st.session_state.client = None
 if "username" not in st.session_state:
     st.session_state.username = None
-if "awaiting_2fa" not in st.session_state:
-    st.session_state.awaiting_2fa = False
-if "pending_username" not in st.session_state:
-    st.session_state.pending_username = None
-if "pending_password" not in st.session_state:
-    st.session_state.pending_password = None
-if "pending_client" not in st.session_state:
-    st.session_state.pending_client = None
-if "pending_2fa_notice" not in st.session_state:
-    st.session_state.pending_2fa_notice = None
 if "scan_result" not in st.session_state:
     st.session_state.scan_result = None
 if "whitelist" not in st.session_state:
@@ -99,106 +89,40 @@ with st.expander(t("about.header")):
     st.warning(t("about.credentials_warning"), icon="🔑")
 
 
-def _clear_pending_login():
-    st.session_state.awaiting_2fa = False
-    st.session_state.pending_username = None
-    st.session_state.pending_password = None
-    st.session_state.pending_client = None
-    st.session_state.pending_2fa_notice = None
-
-
 def _render_login():
     st.subheader(t("login.header"))
-
-    if st.session_state.awaiting_2fa:
-        if st.session_state.pending_2fa_notice == "legacy_unsupported":
-            st.warning(t("login.2fa.legacy_unsupported"))
-        with st.form("two_factor_form"):
-            code = st.text_input(t("login.2fa.code"))
-            submitted = st.form_submit_button(t("login.2fa.submit"))
-        if submitted:
-            result = auth.attempt_login(
-                st.session_state.pending_username,
-                st.session_state.pending_password,
-                verification_code=code,
-                client=st.session_state.pending_client,
-            )
-            _handle_login_result(result, st.session_state.pending_username)
-        return
-
-    method = st.radio(
-        t("login.method.label"),
-        ["password", "cookie"],
-        format_func=lambda m: t(f"login.method.{m}"),
-        horizontal=True,
-    )
-
-    if method == "cookie":
-        st.caption(t("login.cookie.help"))
-        st.warning(t("login.cookie.danger"))
-        with st.expander(t("login.cookie.howto_header")):
-            st.markdown(t("login.cookie.howto_intro"))
-            st.markdown(t("login.cookie.howto_install"))
-            st.markdown(t("login.cookie.howto_export"))
-            st.markdown(t("login.cookie.howto_paste"))
-            st.markdown(t("login.cookie.howto_after"))
-            st.divider()
-            st.markdown(t("login.cookie.machine_header"))
-            st.markdown(t("login.cookie.machine_tips"))
-        with st.form("cookie_login_form"):
-            pasted = st.text_area(t("login.cookie.label"), height=100)
-            submitted = st.form_submit_button(t("login.cookie.submit"))
-        if submitted:
-            if not pasted.strip():
-                return
-            result = auth.attempt_login_with_cookie(pasted)
-            _handle_login_result(result, result.client.username if result.client else "")
-        return
-
-    with st.form("login_form"):
-        username = st.text_input(t("login.username"))
-        password = st.text_input(t("login.password"), type="password")
-        submitted = st.form_submit_button(t("login.submit"))
+    st.caption(t("login.cookie.help"))
+    st.warning(t("login.cookie.danger"))
+    with st.expander(t("login.cookie.howto_header")):
+        st.markdown(t("login.cookie.howto_intro"))
+        st.markdown(t("login.cookie.howto_install"))
+        st.markdown(t("login.cookie.howto_export"))
+        st.markdown(t("login.cookie.howto_paste"))
+        st.markdown(t("login.cookie.howto_after"))
+        st.divider()
+        st.markdown(t("login.cookie.machine_header"))
+        st.markdown(t("login.cookie.machine_tips"))
+    with st.form("cookie_login_form"):
+        pasted = st.text_area(t("login.cookie.label"), height=100)
+        submitted = st.form_submit_button(t("login.cookie.submit"))
     if submitted:
-        if not username or not password:
+        if not pasted.strip():
             return
-        result = auth.attempt_login(username, password)
-        if result.status == "two_factor_required":
-            st.session_state.awaiting_2fa = True
-            st.session_state.pending_username = username
-            st.session_state.pending_password = password
-            st.session_state.pending_client = result.client
-            st.session_state.pending_2fa_notice = result.error
-            st.rerun()
-        _handle_login_result(result, username)
+        result = auth.attempt_login_with_cookie(pasted)
+        _handle_login_result(result, result.client.username if result.client else "")
 
 
 def _handle_login_result(result: auth.LoginResult, username: str):
     if result.status == "success":
         st.session_state.client = result.client
         st.session_state.username = username
-        _clear_pending_login()
         st.rerun()
-    elif result.status == "bad_credentials":
-        st.error(t("login.error.bad_credentials"))
-    elif result.status == "two_factor_required":
-        # Wrong/expired code: keep the SAME client so the user can retry
-        # without losing the device fingerprint tied to the challenge.
-        st.session_state.pending_client = result.client
-        st.error(t("login.error.bad_credentials"))
-    elif result.status == "challenge_required":
-        st.error(t("login.error.challenge"))
-        _clear_pending_login()
-    elif result.status == "rate_limited":
-        st.error(t("login.error.generic", error=result.error or ""))
-        _clear_pending_login()
     elif result.error == "cookie_not_found":
         st.error(t("login.cookie.error.not_found"))
     elif result.error == "cookie_invalid":
         st.error(t("login.cookie.error.invalid"))
     else:
         st.error(t("login.error.generic", error=result.error or result.status))
-        _clear_pending_login()
 
 
 def _render_timings_settings():

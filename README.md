@@ -18,9 +18,9 @@ Python/Streamlit que inicia sesión en Instagram con `instagrapi`.
 
 ## Cómo funciona
 
-1. Iniciás sesión de una de dos formas (ver detalle en "Login" abajo):
-   usuario/contraseña, o pegando una cookie de sesión ya autenticada
-   (recomendado — evita los problemas de 2FA del login por API).
+1. Iniciás sesión pegando una cookie de sesión ya autenticada (ver detalle
+   en "Login" abajo) — es la única forma soportada, evita por completo los
+   problemas de 2FA/challenge del login por usuario y contraseña.
 2. Ghosted escanea tus seguidores y las cuentas que seguís, calculando quién
    no te sigue de vuelta.
 3. Podés filtrar, buscar, agregar cuentas a una lista blanca (para que nunca
@@ -33,22 +33,20 @@ Python/Streamlit que inicia sesión en Instagram con `instagrapi`.
 La propia app tiene un panel "¿Qué es esto y cómo se usa?" con esta misma
 explicación, en el idioma que elijas.
 
-## Login: usuario/contraseña vs. cookie de sesión
+## Login: cookie de sesión
 
-**Usuario y contraseña** hace que Ghosted inicie sesión como si fuera la app
-móvil de Instagram (vía `instagrapi`). Instagram puede pedir 2FA en ese
-flujo — Ghosted maneja el caso de código por SMS cuando el flujo moderno de
-Instagram lo permite, pero **algunas cuentas caen en un flujo de 2FA más
-viejo que esta librería no puede dirigir a SMS/WhatsApp**; en ese caso hace
-falta una app autenticadora (TOTP) o un código de respaldo para esa cuenta.
+Ghosted solo soporta login por **cookie de sesión** (no usuario/contraseña):
+te logueás normalmente en `instagram.com` en tu propio navegador (ahí
+Instagram entrega 2FA sin problema, como siempre), exportás las cookies de
+esa pestaña con la extensión
+[EditThisCookie v3](https://chromewebstore.google.com/detail/editthiscookie-v3/ojfebgpkimhlhcblbalbfjblapadhbol)
+(o Cookie-Editor, funciona igual), y pegás el resultado completo en
+Ghosted — no hace falta buscar ni editar nada adentro, la app encuentra
+sola el campo `sessionid` que necesita.
 
-**Cookie de sesión** (recomendado) evita todo eso: te logueás normalmente en
-`instagram.com` en tu propio navegador (ahí Instagram entrega 2FA sin
-problema), exportás las cookies de esa pestaña con una extensión tipo
-[EditThisCookie](https://chromewebstore.google.com/detail/editthiscookie-v3/ojfebgpkimhlhcblbalbfjblapadhbol)
-o Cookie-Editor, y pegás el resultado completo en Ghosted — no hace falta
-buscar ni editar nada adentro, la app encuentra sola el campo `sessionid`
-que necesita.
+Esto evita por completo lidiar con el 2FA o los checkpoints de seguridad
+de Instagram dentro de la app: para cuando tenés la cookie, ya pasaste esa
+verificación en tu propio navegador.
 
 ### Cómo exportar la cookie (demo educativa)
 
@@ -145,7 +143,7 @@ pytest
 Ghosted/
 ├── src/
 │   ├── app.py              # Entry point Streamlit, orquesta las vistas
-│   ├── auth.py              # Login instagrapi (usuario/contraseña o cookie), credenciales solo en session_state
+│   ├── auth.py              # Login instagrapi por cookie de sesión, credenciales solo en session_state
 │   ├── scanner.py           # Fetch followers/following, cálculo de no-seguidores
 │   ├── unfollow.py          # Acción de unfollow con timings/jitter
 │   ├── whitelist.py         # Lista blanca (session_state + export/import JSON)
